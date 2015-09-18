@@ -6,6 +6,13 @@ needs "enriquesDiagram.m2"
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
 
+jacobiIdeal = method(TypicalValue => Ideal);
+jacobiIdeal (RingElement) := (f) -> (
+  x := first generators ring f;
+  y := last generators ring f;
+  return ideal(diff(x, f), diff(y, f));
+)
+
 ZZ[x, y];
 
 -- Casas' book example.
@@ -61,13 +68,3 @@ vA = (y^4 - x^11)*(y^3 - x^8)*(y^9 - x^22)*(y^12 - x^29)*(y^4 - x^9);
 vB = (y^5 - x^8)*(y^4 - 4*x^2*y^3 + 6*x^4*y^2 - 4*x^6*y - x^7 + x^8)*(y^16 - 4*x^7*y^12 + 6*x^14*y^8 - 80*x^14*y^9 - 4*x^21*y^4 - 160*x^21*y^5 - 72*x^21*y^6 + x^28 - 16*x^28*y + 56*x^28*y^2 - 16*x^28*y^3 - x^35)*(y^20 - 5*x^7*y^16 + 10*x^14*y^12 - 60*x^14*y^13 - 10*x^21*y^8 - 540*x^21*y^9 - 2*x^21*y^10 + 5*x^28*y^4 - 404*x^28*y^5 + 380*x^28*y^5 - x^35 - 20*x^35*y - 90*x^35*y^2 - 40*x^35*y^3 + x^42);
 vC = (y^3 - x^8)*(y^4 - x^9)*(y^7 - x^16)*(y^16 - 4*x^11*y^12 - 80*x^21*y^9 + 6*x^22*y^8 - 72*x^31*y^6 - 160*x^32*y^5 - 4*x^33*y^4 - 16*x^41*y^3 + 56*x^42*y^2 - 16*x^43*y + x^44 - x^51)*(y^20 - 5*x^11*y^16 + 10*x^22*y^12 - 140*x^24*y^12 - 10*x^33*y^8 - 620*x^35*y^8 - 110*x^37*y^8 + 5*x^44*y^4 - 260*x^46*y^4 + 340*x^48*y^4 - 20*x^50*y^4 - x^55 - 4*x^57 - 6*x^59 - 4*x^61 - x^63);
 
------
-I = ideal(x^2, y^3);
-J = ideal(x^2, y^7);
-
-jacobiIdeal = method(TypicalValue => Ideal);
-jacobiIdeal (RingElement) := (f) -> (
-  x := first generators ring f;
-  y := last generators ring f;
-  return ideal(diff(x, f), diff(y, f));
-)

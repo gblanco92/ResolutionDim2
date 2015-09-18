@@ -1,7 +1,30 @@
 needs "puiseuxSerie.m2"
-needs "utilities.m2"
-path = {"~/M2-NAG/M2/Macaulay2/packages/"} | path
-needsPackage "NumericalAlgebraicGeometry";
+
+squareFreePart = method(TypicalValue => RingElement);
+squareFreePart (RingElement) := (f) -> (
+  y := last generators ring f;
+  return f//gcd(f, diff(y, f));
+)
+
+squareFreeFactorization = method(TypicalValue => List);
+squareFreeFactorization (RingElement) := (f) -> (
+  -- Yun's algorithm
+  y := last generators ring f;
+  d := diff(y, f);
+  squareFree := {};
+  while degree f != {0} do (
+    a := gcd(f, d);
+    f = f//a;
+    d = d//a - diff(y, f);
+    squareFree = append(squareFree, a);
+  );
+  squareFree = drop(squareFree, 1);
+  return apply(select(pack(2, mingle(squareFree, 1..#squareFree)),
+    fact -> not isConstant fact#0), toSequence);
+)
+
+ZZ * InfiniteNumber := (n, inf) -> if n == 0 then 0 else
+  if n > 0 then infinity else -infinity;
 
 ccwTurn = method(TypicalValue => Boolean);
 ccwTurn (BasicList, BasicList, BasicList) := (p1, p2, p3) -> (
@@ -42,37 +65,6 @@ newtonSides (RingElement, List) := (f, points) -> (
   numSides := #points - 1;
   return apply(points_{0..numSides-1}, points_{1..numSides}, (p, q) ->
            newtonSide(p, q, f));
-)
-
-rootsSide = method(TypicalValue => List);
-rootsSide (RingElement, ZZ) := (f, n) -> (
-  -- Yun's algorithm (over CC[z])
-  Z := first generators ring f;
-  d := diff(Z, f);
-  squareFree := {};
-  while degree f != {0} do (
-    a := GCD(f, d);
-    if degree a == {0} then d = 0*Z
-    else (f = quot(f,a); d = quot(d,a) - diff(Z, f));
-    squareFree = append(squareFree, {a});
-  );
-  -- Drop first element and constant polynomials.
-  squareFree = select(drop(squareFree, 1), p -> degree first p != {0});
-  -- Solve & refine solutions using NAG.
-  bits := precision ring f;
-  solutions := apply(squareFree, apply(squareFree, solveSystem),
-    (pol, sol) -> refine(pol, sol, Bits => bits,
-                                   ResidualTolerance => 2.0^(-bits),
-                                   ErrorTolerance => 2.0^(-bits)));
-  -- Make sure NAG's solveSytem worked correctly
-  apply(squareFree, solutions, (g, roots) -> assert(degree g#0 == {#roots}));
-  -- Clean residuals in real/img parts.
-  return apply(flatten solutions, point -> (
-    p := (first coordinates point)^(1/n);
-    if abs(realPart p) < 2.0^-bits then p = (imaginaryPart p)*ii;
-    if abs(imaginaryPart p) < 2.0^-bits then p = realPart p;
-    return p;
-  ));
 )
 
 puiseuxExpansion = method(TypicalValue => List,
@@ -141,9 +133,9 @@ puiseuxExpansionLoop (RingElement, List, ZZ) := (f, L, num) -> (
   -- Step (i.b): For each side...
   return exactBranch | flatten apply(newtonSides(f, Nf), (m, n, k, F) ->
     -- For each root...
-    flatten apply(rootsSide(F, n), a -> (
+    flatten apply(unique(roots(F)), a -> (
       -- Get the solution, do & undo the change of variables.
-      newVar := { x => x^n, y => x^m*(a + y) };
+      newVar := { x => x^n, y => x^m*(a^(1/n) + y) };
       apply(puiseuxExpansionLoop(
           clean(eps, sub(f, newVar)), apply(L, (g, m, i) ->
             (clean(eps, sub(g, newVar)), m, i)), num - 1),

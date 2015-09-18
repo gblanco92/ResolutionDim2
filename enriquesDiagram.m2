@@ -1,5 +1,4 @@
 needs "puiseuxExpansion.m2"
-needs "utilities.m2"
 debuggingMode = false;
 
 basePoints = method(TypicalValue => Sequence)
