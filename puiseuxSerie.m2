@@ -9,7 +9,7 @@ PuiseuxSerie = new Type of HashTable;
 puiseuxSerie = method(TypicalValue => PuiseuxSerie);
 puiseuxSerie (RingElement, ZZ) := (f, m) -> (
   if not isPolynomialRing ring f then error "not a polynomial";
-  if f == 0 then return new PuiseuxSerie from hashTable {p=>f, n=>1};
+  if degree f == {0} then return new PuiseuxSerie from hashTable {p=>f, n=>1};
   return new PuiseuxSerie from hashTable {p=>f, n=>m};
 )
 
