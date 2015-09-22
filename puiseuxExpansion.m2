@@ -1,4 +1,4 @@
-needs "puiseuxSerie.m2"
+needs "puiseuxSeries.m2"
 
 squareFreePart = method(TypicalValue => RingElement);
 squareFreePart (RingElement) := (f) -> (
@@ -91,7 +91,7 @@ puiseuxExpansion (RingElement) := opts -> (f) -> (
 
 puiseuxExpansion (List) := opts -> (L) -> (
   if not all(L, f -> numgens ring f == 2) then
-    error not "bivariate polynomials";
+    error "not bivariate polynomials";
   R := coefficientRing ring L#0;
   if R =!= ZZ and R =!= QQ then error "coefficient ring must be ZZ or QQ";
   z := first generators ring L#0; w := last generators ring L#0;
