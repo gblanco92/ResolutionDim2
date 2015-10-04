@@ -108,8 +108,7 @@ puiseuxExpansion (List) := opts -> (L) -> (
   sqFreePart := sub(squareFreePart(f), V);
   sqFreeFact := flatten apply(apply(L, l -> apply(squareFreeFactorization l,
     (g, m) -> (sub(g, V), m))), 1..#L, (l, i) -> apply(l, (g, m) -> (g, m, i)));
-  return yBranch | apply(puiseuxExpansionLoop(sqFreePart, sqFreeFact, -1),
-    s -> (s#0, s#1));
+  return yBranch | apply(puiseuxExpansionLoop(sqFreePart, sqFreeFact, -1));
 )
 
 puiseuxExpansionLoop = method(TypicalValue => List);
@@ -139,7 +138,7 @@ puiseuxExpansionLoop (RingElement, List, ZZ) := (f, L, num) -> (
       apply(puiseuxExpansionLoop(
           clean(eps, sub(f, newVar)), apply(L, (g, m, i) ->
             (clean(eps, sub(g, newVar)), m, i)), num - 1),
-        (s, i) -> (x^(m/n)*(a + sub(s, x => x^(1/n))), i))
+        (s, I) -> (x^(m/n)*(a + sub(s, x => x^(1/n))), I))
     ))
   );
 )
