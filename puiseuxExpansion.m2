@@ -132,7 +132,7 @@ puiseuxExpansionLoop (RingElement, List, ZZ) := (f, L, num) -> (
   -- Step (i.b): For each side...
   return exactBranch | flatten apply(newtonSides(f, Nf), (m, n, k, F) ->
     -- For each root...
-    flatten apply(unique(roots(F)), a -> (
+    flatten apply(roots(F, Unique => true), a -> (
       -- Get the solution, do & undo the change of variables.
       newVar := { x => x^n, y => x^m*(a^(1/n) + y) };
       apply(puiseuxExpansionLoop(
