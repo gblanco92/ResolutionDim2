@@ -108,7 +108,7 @@ puiseuxExpansion (List) := opts -> (L) -> (
   sqFreePart := sub(squareFreePart(f), V);
   sqFreeFact := flatten apply(apply(L, l -> apply(squareFreeFactorization l,
     (g, m) -> (sub(g, V), m))), 1..#L, (l, i) -> apply(l, (g, m) -> (g, m, i)));
-  return yBranch | apply(puiseuxExpansionLoop(sqFreePart, sqFreeFact, -1));
+  return yBranch | puiseuxExpansionLoop(sqFreePart, sqFreeFact, -1);
 )
 
 puiseuxExpansionLoop = method(TypicalValue => List);
