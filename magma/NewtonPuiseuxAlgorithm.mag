@@ -1,0 +1,141 @@
+
+Q<x, y> := PolynomialRing(RationalField(), 2);
+
+// Casas' book example.
+book := y^4 - x^2*y^2 - 2*x^4*y^2 + x^4*y + x^5*y + x^7;
+
+// email examples.
+aa := y^4 - 2*x^3*y^2 + x^6 - 4*x^10*y - x^17;
+bb := x^4 - 2*x^2*y^5 - 4*x*y^8 + y^10 - y^11;
+bbb := -x^11 + x^10 - 4*y*x^8 - 2*y^2*x^5 + y^4;
+cc := y^4 - 2*x^3*y^2 + x^6 - 4*x^9*y - x^15;
+
+ee := bb^2 + x^10;
+ff := bbb^2 + y^10;
+
+gg := bb^2 + x^11;
+jj := bbb^2 + y^11;
+
+mm := bb^3 + x^13; // 3 char exponents
+ll := bbb^3 + y^13; // 3 char exponents
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+/*
+ *
+ */
+xFactor := function(f)
+  return Vertices(NewtonPolygon(f: Faces := "Lower"))[1][1];
+end function;
+
+yFactor := function(f)
+  V := Vertices(NewtonPolygon(f: Faces := "Lower"));
+  return V[#V][2];
+end function;
+
+/*
+ *
+ */
+FacePolynomial := function(F)
+  f := FaceFunction(F);
+  P<Z> := PolynomialRing(CoefficientRing(Parent(f)));
+  f := Evaluate(f, <1, Z>);
+  E, _ := Support(f); C := Coefficients(f);
+  n := GradientVector(F)[1]; b := Integers()!EndVertices(F)[2][2];
+  return &+[C[e + 1]*Z^((e - b) div n) : e in E];
+end function;
+
+forward NewtonPuiseuxAlgorithmLoop;
+
+/*
+ *
+ */
+NewtonPuiseuxAlgorithm := function(f: Terms := -1)
+  // If Nf start on the right of the x-axis, we have an x-factor.
+  yBranch := (xFactor(f) gt 0) select [<Parent(f).1, xFactor(f)>] else [];
+
+  P<x, y> := PolynomialRing(AlgebraicClosure(CoefficientRing(Parent(f))), 2);
+  S := NewtonPuiseuxAlgorithmLoop(P!SquarefreePart(f),
+    [<P!g[1], g[2]> : g in SquarefreeFactorization(f)], 1, Terms);
+  return yBranch cat S;
+end function;
+
+/*
+ *
+ */
+NewtonPuiseuxAlgorithmLoop := function(f, L, nn, num)
+  S<x> := PuiseuxSeriesRing(CoefficientRing(Parent(f)): Precision := nn);
+  // Select only those factors that contain the current branch.
+  L := [g : g in L | Height(g[1]) ne 0];
+
+  N := NewtonPolygon(f);
+  // If the height is 1 we can stop here as this branch has been
+  // separated from the rest. (Except if more terms have been requested.)
+  if (num lt 0 and Height(f) eq 1) or num eq 0 then
+    return [<S!0 , L[1][2]>];
+  end if;
+
+  x0 := Parent(f).1; y0 := Parent(f).2;
+  // Step (i.a): Select only those factors containing the 0 branch.
+  S := (yFactor(f) gt 0) select
+    [<S!0, [g[2] : g in L | yFactor(g[1]) gt 0][1]>] else [];
+  // Step (i.b): For each side...
+  for F in Faces(N) do
+    n := GradientVector(F)[1]; m := GradientVector(F)[2];
+    // For each root...
+    for a in [Root(a[1], n) : a in Roots(FacePolynomial(F))] do
+      // Apply the change of variables and get the sub-solution.
+      R := NewtonPuiseuxAlgorithmLoop(Evaluate(f, <x0^n, x0^m*(a + y0)>),
+        [<Evaluate(g[1], <x0^n, x0^m*(a + y0)>), g[2]> : g in L],
+        nn*n, num - 1);
+      // Undo the change of variables.
+      S cat:= [<x^(m/n)*(a + Composition(s[1], x^(1/n))), s[2]> : s in R];
+    end for;
+  end for;
+
+  return S;
+end function;
+
+forward NewtonPuiseuxAlgorithmReducedLoop;
+
+/*
+ *
+ */
+NewtonPuiseuxAlgorithmReduced := function(f: Terms := -1)
+  // If Nf start on the right of the x-axis, we have an x-factor.
+  yBranch := (xFactor(f) gt 0) select [Parent(f).1] else [];
+
+  P := PolynomialRing(AlgebraicClosure(CoefficientRing(Parent(f))), 2);
+  S := NewtonPuiseuxAlgorithmReducedLoop(P!SquarefreePart(f), 1, Terms);
+  return yBranch cat S;
+end function;
+
+/*
+ *
+ */
+NewtonPuiseuxAlgorithmReducedLoop := function(f, ord, terms)
+  A := CoefficientRing(Parent(f));
+  x0 := Parent(f).1; y0 := Parent(f).2;
+  // Step (i.a): Select only those factors containing the 0 branch.
+  S := yFactor(f) gt 0 select [0] else [];
+  // Step (i.b): For each side...
+  for F in Faces(NewtonPolygon(f)) do
+    n := GradientVector(F)[1]; m := GradientVector(F)[2];
+    P<x> := PuiseuxSeriesRing(A: Precision := ord*n);
+    // Apply the change of variables (1).
+    C := Reverse(Coefficients(n eq 1 select f else Evaluate(f, 1, x0^n), 2));
+    // For each root...
+    for a in [<Root(a[1], n), a[2]> : a in Roots(FacePolynomial(F))] do
+      // Apply the change of variables (2) & get the sub-solution recursively.
+      R := a[2] ne 1 or terms gt 0 select
+        NewtonPuiseuxAlgorithmReducedLoop([i gt 1 select
+          C[i] + Self(i-1)*x0^m*(a[1] + y0) else C[1] : i in [1..#C]][#C],
+        ord*n, terms - 1) else [P!0];
+      // Undo the change of variables.
+      S cat:= [x^(m/n)*(a[1] + Composition(s, x^(1/n))) : s in R];
+    end for;
+  end for;
+
+  return S;
+end function;

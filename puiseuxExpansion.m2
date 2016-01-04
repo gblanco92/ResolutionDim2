@@ -80,7 +80,7 @@ puiseuxExpansion (RingElement) := opts -> (f) -> (
 
   Nf := newtonPolygon f;
   yBranch := {};
-  -- If Nf starts on the right of the y-axis, we have an x-factor.
+  -- If Nf starts on the right of the x-axis, we have an x-factor.
   if (first Nf)#0 > 0 then yBranch = { (x, (first Nf)#0) };
 
   V := {z => x, w => y};
@@ -120,9 +120,10 @@ puiseuxExpansionLoop (RingElement, List, ZZ) := (f, L, num) -> (
   L = select(L, (g, m, i) -> (first newtonPolygon g)#1 != 0);
 
   Nf := newtonPolygon f;
-  -- If the height is 1 we can stop here as this branch has been
-  -- separated from the rest. (Except if more terms have been requested.)
-  if (num < 0 and (first Nf)#1 == 1) or num == 0 then
+  -- If the height is 1 and at leat on term has been computed we can stop
+  -- here as this branch has been separated from the rest.
+  -- (Except if more terms have been requested.)
+  if (num < -1 and (first Nf)#1 == 1) or num == 0 then
     return { ((0*x)^(1_QQ), apply(L, (g, m, i) -> (i, m))) };
 
   -- Step (i.a): Select only those factors containing the 0 branch.
@@ -130,15 +131,16 @@ puiseuxExpansionLoop (RingElement, List, ZZ) := (f, L, num) -> (
     (g, m, i) -> (last newtonPolygon g)#1 > 0), (g, m, i) -> (i, m))) }
   else exactBranch = {};
   -- Step (i.b): For each side...
-  return exactBranch | flatten apply(newtonSides(f, Nf), (m, n, k, F) ->
+  return exactBranch | flatten apply(newtonSides(f, Nf), (m, n, k, F) -> (
     -- For each root...
     flatten apply(roots(F, Unique => true), a -> (
-      -- Get the solution, do & undo the change of variables.
+      -- Apply the change of variables.
       newVar := { x => x^n, y => x^m*(a^(1/n) + y) };
-      apply(puiseuxExpansionLoop(
-          clean(eps, sub(f, newVar)), apply(L, (g, m, i) ->
-            (clean(eps, sub(g, newVar)), m, i)), num - 1),
-        (s, I) -> (x^(m/n)*(a + sub(s, x => x^(1/n))), I))
+      ff := clean(eps, sub(f, newVar));
+      LL := apply(L, (g, m, i) -> (clean(eps, sub(g, newVar)), m, i));
+      -- Get the solution & undo the change of variables.
+      apply(puiseuxExpansionLoop(ff, LL, num - 1),
+        (s, I) -> (x^(m/n)*(a^(1/n) + sub(s, x => x^(1/n))), I))
     ))
-  );
+  ));
 )
