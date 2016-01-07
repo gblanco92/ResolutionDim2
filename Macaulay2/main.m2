@@ -1,21 +1,14 @@
-needs "enriquesDiagram.m2"
+needs "./basePoints.m2"
 
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
-
-jacobiIdeal = method(TypicalValue => Ideal);
-jacobiIdeal (RingElement) := (f) -> (
-  x := first generators ring f;
-  y := last generators ring f;
-  return ideal(diff(x, f), diff(y, f));
-)
 
 ZZ[x, y];
 
--- Casas' book example.
+-- book example.
 book = y^4 - x^2*y^2 - 2*x^4*y^2 + x^4*y + x^5*y + x^7;
 
 -- email examples.
@@ -42,6 +35,8 @@ f3 = y^3-x^2;
 f = y^3 + x^2*y^2 + x^6;
 g = x^3 + x^2*y^2 + y^6;
 h = x^5+y^5;
+foo = x+y;
+bar = y*(x+y);
 
 -- Victor's Thesis examples.
 v1 = (y^2 - x^3)*(y^2 + x^3);

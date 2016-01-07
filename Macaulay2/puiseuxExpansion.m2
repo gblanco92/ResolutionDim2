@@ -1,4 +1,4 @@
-needs "puiseuxSeries.m2"
+needs "./puiseuxSeries.m2"
 
 squareFreePart = method(TypicalValue => RingElement);
 squareFreePart (RingElement) := (f) -> (
@@ -76,7 +76,7 @@ puiseuxExpansion (RingElement) := opts -> (f) -> (
   R := coefficientRing ring f;
   if R =!= ZZ and R =!= QQ then error "coefficient ring must be ZZ or QQ";
   z := first generators ring f; w := last generators ring f;
-  use CC_(2*opts.Bits)[local x, local y];
+  CCC := CC_(2*opts.Bits)[local x, local y];
 
   Nf := newtonPolygon f;
   yBranch := {};
@@ -95,7 +95,7 @@ puiseuxExpansion (List) := opts -> (L) -> (
   R := coefficientRing ring L#0;
   if R =!= ZZ and R =!= QQ then error "coefficient ring must be ZZ or QQ";
   z := first generators ring L#0; w := last generators ring L#0;
-  use CC_(2*opts.Bits)[local x, local y];
+  CCC := CC_(2*opts.Bits)[local x, local y];
 
   f := product L;
   Nf := newtonPolygon f;
@@ -116,8 +116,6 @@ puiseuxExpansionLoop (RingElement, List, ZZ) := (f, L, num) -> (
   x := first generators ring f;
   y := last generators ring f;
   eps := 2.0^(-(precision ring f)/2);
-  -- Select only those factors that contain the current branch.
-  L = select(L, (g, m, i) -> (first newtonPolygon g)#1 != 0);
 
   Nf := newtonPolygon f;
   -- If the height is 1 and at leat on term has been computed we can stop
@@ -136,8 +134,10 @@ puiseuxExpansionLoop (RingElement, List, ZZ) := (f, L, num) -> (
     flatten apply(roots(F, Unique => true), a -> (
       -- Apply the change of variables.
       newVar := { x => x^n, y => x^m*(a^(1/n) + y) };
-      ff := clean(eps, sub(f, newVar));
       LL := apply(L, (g, m, i) -> (clean(eps, sub(g, newVar)), m, i));
+      -- Select only those factors that contain the current branch.
+      LL = select(LL, (g, m, i) -> (first newtonPolygon g)#1 != 0);
+      ff := product apply(LL, (g, m, i) -> g);
       -- Get the solution & undo the change of variables.
       apply(puiseuxExpansionLoop(ff, LL, num - 1),
         (s, I) -> (x^(m/n)*(a^(1/n) + sub(s, x => x^(1/n))), I))

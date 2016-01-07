@@ -49,44 +49,44 @@ lift (PuiseuxSerie, PolynomialRing) := (f, R) -> (
 
 - PuiseuxSerie := (f) -> puiseuxSerie(-f.p, f.n);
 
-rootUnity = method(TypicalValue => RingElement, Options => {Bits => 300})
-rootUnity (QQ) := opts -> (kn) -> (
-  bits := 2*opts.Bits;
-  ppi := numeric_bits pi;
-  root := exp(2*ppi*ii*kn);
-  if (abs(realPart root) < 2.0^(-bits/2)) then root = (imaginaryPart root)*ii;
-  if (abs(imaginaryPart root) < 2.0^(-bits/2)) then root = realPart root;
-  return root;
-)
-
-conjugate (PuiseuxSerie) := (f) -> (
-  x := first generators ring f;
-  n := f.n;
-  bits := precision coefficientRing ring f;
-  return apply(toList(1..n), k -> sum apply(listForm f, (e, c) ->
-    c*rootUnity((e#0)*k, Bits => bits//2)*x^(e#0)));
-)
-
-clean (PuiseuxSerie) := (f) -> (
-  x := first generators ring f; y := last generators ring f;
-  bits := precision coefficientRing ring f;
-  s := puiseuxSerie(0*x, 1);
-  s = s + sum apply(listForm f, (e, c) -> (
-    if (abs(realPart c) < 2.0^(-bits)) then c = (imaginaryPart c)*ii;
-    if (abs(imaginaryPart c) < 2.0^(-bits)) then c = realPart c;
-    return c*x^(e#0)*y^(e#1);
-  )); return s;
-)
-
-toPolynomial = method(TypicalValue => RingElement)
-toPolynomial (PuiseuxSerie) := (s) -> (
-  R := ring s;
-  y := puiseuxSerie(last generators R, 1);
-  factors := apply(conjugate s, si -> y - si);
-  p := clean(product apply(conjugate s, si -> y - si));
-  x := first generators R; y = last generators R;
-  return sum apply(listForm p.p, (e, a) -> a*x^(e#0//p.n)*y^(e#1//p.n));
-)
+--rootUnity = method(TypicalValue => RingElement, Options => {Bits => 300})
+--rootUnity (QQ) := opts -> (kn) -> (
+--  bits := 2*opts.Bits;
+--  ppi := numeric_bits pi;
+--  root := exp(2*ppi*ii*kn);
+--  if (abs(realPart root) < 2.0^(-bits/2)) then root = (imaginaryPart root)*ii;
+--  if (abs(imaginaryPart root) < 2.0^(-bits/2)) then root = realPart root;
+--  return root;
+--)
+--
+--conjugate (PuiseuxSerie) := (f) -> (
+--  x := first generators ring f;
+--  n := f.n;
+--  bits := precision coefficientRing ring f;
+--  return apply(toList(1..n), k -> sum apply(listForm f, (e, c) ->
+--    c*rootUnity((e#0)*k, Bits => bits//2)*x^(e#0)));
+--)
+--
+--clean (PuiseuxSerie) := (f) -> (
+--  x := first generators ring f; y := last generators ring f;
+--  bits := precision coefficientRing ring f;
+--  s := puiseuxSerie(0*x, 1);
+--  s = s + sum apply(listForm f, (e, c) -> (
+--    if (abs(realPart c) < 2.0^(-bits)) then c = (imaginaryPart c)*ii;
+--    if (abs(imaginaryPart c) < 2.0^(-bits)) then c = realPart c;
+--    return c*x^(e#0)*y^(e#1);
+--  )); return s;
+--)
+--
+--toPolynomial = method(TypicalValue => RingElement)
+--toPolynomial (PuiseuxSerie) := (s) -> (
+--  R := ring s;
+--  y := puiseuxSerie(last generators R, 1);
+--  factors := apply(conjugate s, si -> y - si);
+--  p := clean(product apply(conjugate s, si -> y - si));
+--  x := first generators R; y = last generators R;
+--  return sum apply(listForm p.p, (e, a) -> a*x^(e#0//p.n)*y^(e#1//p.n));
+--)
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
