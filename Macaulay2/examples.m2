@@ -1,5 +1,5 @@
 
-ZZ[x, y];
+QQ[x, y];
 
 -- [1] pg. 16 example.
 book = y^4 - x^2*y^2 - 2*x^4*y^2 + x^4*y + x^5*y + x^7;
