@@ -276,3 +276,8 @@ assert(#e == #v);
 -- assert(numRows P == 103);
 -- assert(numColumns P == 103);
 -- assert(#e == #v);
+
+(P, e, v) = basePoints(ideal((diff(x, v9))^2, diff(y, v8)));
+assert(numRows P == 0);
+assert(numColumns P == 0);
+assert(#e == #v);

@@ -1,4 +1,7 @@
-loadPackage "ResolutionDim2"
+load "ResolutionDim2/puiseuxSeries.m2"
+load "ResolutionDim2/puiseuxExpansion.m2"
+load "ResolutionDim2/proximityMatrix.m2"
+load "ResolutionDim2/basePoints.m2"
 
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
