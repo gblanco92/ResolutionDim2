@@ -24,7 +24,7 @@ proximityMatrix (List) := opts -> (branches) -> (
   -- near point inside P.
   (P, p) := proximityMatrix(contactMat, branchProx);
   mult := {};
-  -- Rearranges each point's multiplicity so its position is coherent with P.
+  -- Rearrange each point's multiplicity so its position is coherent with P.
   for i from 0 to #branches - 1 do (
     m := new MutableList from (numcols(P):0);
     for j from 0 to #p#i - 1 do m#(p#i#j) = branchMult#i_j;
@@ -41,14 +41,14 @@ proximityMatrix (Matrix, List) := opts -> (contactMat, branchProx) -> (
   -- Substract one to all the contact numbers except the diagonal ones.
   contactMat = contactMat - matrix pack(#branchProx, (#branchProx)^2:1) +
     matrix mutableIdentity(ZZ, #branchProx);
-  -- Idenitify each current branch with an ID from 0 to #brances.
+  -- Identify each current branch with an ID from 0 to #brances-1.
   C := contactMat;
   remainingBranch := toList(0..numcols(C) - 1);
   -- Splits will contain lists of branches ID, where two branches will
   -- be in the same list iff they don't separate in the current node.
   splits := {};
   while #remainingBranch != 0 do (
-    -- Get the contact number of the first remaining branch;
+    -- Get the contact number of the first remaining branch.
     branchContacts := first entries C;
     -- Get the positions of the branches with contact > 1 & contact = 1.
     sameBranchIndex := positions(branchContacts, c -> c != 0);
@@ -193,30 +193,6 @@ multiplicityVectorBranch (PuiseuxSeries, ZZ) := opts -> (s, maxContact) -> (
 multiplicityVectorBranch (RingElement, ZZ) := opts -> (x, maxContact) -> (
   if opts.ExtraPoint then maxContact = maxContact + 1;
   return vector toList (maxContact:1);
-)
-
-charExponents = method(TypicalValue => List);
-charExponents (PuiseuxSeries) := (s) -> (
-  exps := reverse exponents s.p;
-  charExps := {(0, s.n)};
-  ni := s.n;
-  while ni != 1 do (
-    -- m_i = min{ j | a_j != 0 and j \not\in (n_{i-1}) }
-    idx := position(exps, e -> e#0 % ni != 0);
-    mi := exps#idx#0;
-    -- n_i = gcd(n, m_1, ..., m_k)
-    ni = gcd(ni, mi);
-    charExps = append(charExps, (exps#idx#0, ni));
-  ); return charExps;
-)
-
-tailExponents = method(TypicalValue => List);
-tailExponents (PuiseuxSeries) := (s) -> (
-  exps := reverse exponents s.p;
-  (mk, nk) := last charExponents(s);
-  -- If smooth branch take all, otherwise look for the last char. exp.
-  if mk == 0 then idx := 0 else idx = position(exps, e -> e#0 == mk);
-  return take(apply(exps, e -> (e#0, 1)), {idx, #exps});
 )
 
 euclides = method(TypicalValue => List);

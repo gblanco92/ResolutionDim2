@@ -1,7 +1,7 @@
 squareFreePart = method(TypicalValue => RingElement);
 squareFreePart (RingElement) := (f) -> (
   y := last generators ring f;
-  return f//gcd(f, diff(y, f));
+  return f//gcd(f, diff(y, f), diff(x, f));
 )
 
 squareFreeFactorization = method(TypicalValue => List);
@@ -135,7 +135,7 @@ puiseuxExpansionLoop (RingElement, List, ZZ) := (f, L, num) -> (
       LL := apply(L, (g, m, i) -> (clean(eps, sub(g, newVar)), m, i));
       -- Select only those factors that contain the current branch.
       LL = select(LL, (g, m, i) -> (first newtonPolygon g)#1 != 0);
-      ff := product apply(LL, (g, m, i) -> g);
+      ff := clean(eps, sub(f, newVar));
       -- Get the solution & undo the change of variables.
       apply(puiseuxExpansionLoop(ff, LL, num - 1),
         (s, I) -> (x^(m/n)*(a^(1/n) + sub(s, x => x^(1/n))), I))

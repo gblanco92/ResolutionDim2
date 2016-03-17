@@ -1,4 +1,5 @@
 load "ResolutionDim2/puiseuxSeries.m2"
+load "ResolutionDim2/semiGroup.m2"
 load "ResolutionDim2/puiseuxExpansion.m2"
 load "ResolutionDim2/proximityMatrix.m2"
 load "ResolutionDim2/basePoints.m2"
@@ -9,7 +10,7 @@ load "ResolutionDim2/basePoints.m2"
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
 
-ZZ[x, y];
+QQ[x, y];
 
 -- book example.
 book = y^4 - x^2*y^2 - 2*x^4*y^2 + x^4*y + x^5*y + x^7;

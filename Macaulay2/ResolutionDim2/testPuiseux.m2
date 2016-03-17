@@ -173,3 +173,12 @@ assert(last S#0 == 1);
 assert(last S#1 == 1);
 assert(charExponents first S#0 == {(0, 1)});
 assert(charExponents first S#1 == {(0, 1)});
+
+S = puiseuxExpansion({bb*aa, bb});
+assert(#S == 2);
+assert(#listForm first S#0 == 2);
+assert(#listForm first S#1 == 2);
+assert(last S#0 == {(1, 1), (2, 1)});
+assert(last S#1 == {(1, 1)});
+assert(charExponents first S#0 == {(0, 10), (4, 2), (5, 1)});
+assert(charExponents first S#0 == {(0, 4), (6, 2), (17, 1)});

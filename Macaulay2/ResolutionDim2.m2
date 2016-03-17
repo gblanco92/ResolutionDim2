@@ -11,20 +11,23 @@ newPackage(
         AuxiliaryFiles => true
         )
 
-export {"PuiseuxSeries","puiseuxExpansion","Bits","Terms","proximityMatrix","ExtraPoint","basePoints"}
+export {"PuiseuxSeries","puiseuxExpansion","Bits","Terms", "charExponents", "semiGroup", "proximityMatrix","ExtraPoint","basePoints"}
 
 load "./ResolutionDim2/puiseuxSeries.m2";
 load "./ResolutionDim2/puiseuxExpansion.m2";
+load "./ResolutionDim2/semiGroup.m2";
 load "./ResolutionDim2/proximityMatrix.m2";
 load "./ResolutionDim2/basePoints.m2";
 
 beginDocumentation()
   load "./ResolutionDim2/docPuiseux.m2";
+  load "./ResolutionDim2/docSemi.m2";
   load "./ResolutionDim2/docProximity.m2";
   load "./ResolutionDim2/docBase.m2";
 
 TEST
   load "./ResolutionDim2/testPuiseux.m2";
+  load "./ResolutionDim2/testSemi.m2";
   load "./ResolutionDim2/testProximity.m2";
   load "./ResolutionDim2/testBase.m2";
 
