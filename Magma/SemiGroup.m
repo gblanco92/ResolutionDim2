@@ -1,6 +1,3 @@
-
-forward TailExponents;
-
 intrinsic CharExponents(s::RngSerPuisElt) -> []
 { Returns the characteristic exponents of a Puiseux series }
   C, m, n := ElementToSequence(s);

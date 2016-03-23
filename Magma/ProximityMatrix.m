@@ -6,7 +6,12 @@ import "SemiGroup.m": TailExponents;
 intrinsic Submatrix(A::Mtrx, I::[RngIntElt], J::[RngIntElt]) -> Mtrx
 { Given an m x n matrix A and integer sequences I and J, return the submatrix
   of A given by the row indices in I and the column indices in J. }
-  return Matrix(Transpose(Matrix(A[I]))[J]);
+  return Transpose(Matrix(Transpose(Matrix(A[I]))[J]));
+end intrinsic;
+
+intrinsic ZeroMatrix(R::Rng, m::RngIntElt, n::RngIntElt) -> Mtrx
+{ Given a ring R and integers m, n≥0, return the m x n zero matrix over R. }
+  return Matrix(m, n, [R!0 : i in [1..m*n]]);
 end intrinsic;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -24,9 +29,9 @@ end function;
 
 PuiseuxInfo := function(s)
   if Type(s) eq RngMPolElt then return [<[<0,0>], [0, Infinity()]>]; end if;
-  I := []; E := CharExponents(s); T := TailExponents(s); n := E[1][2];
-  if T ne [] then Append(~E, T[#T]); end if;
-
+  I := []; E := CharExponents(s); T := TailExponents(s);
+  E cat:= [T[#T]]; n := E[1][2];
+  // For each characteristic exponent...
   for i in [2..#E] do
     mj := E[i-1][1]; nj := E[i-1][2];
     mi := E[i][1]; ni := E[i][2];
@@ -78,7 +83,7 @@ end function;
 
 ContactMatrix := function(branches)
   //Add a dummy term so compare exact branches is easier.
-  max := Max([s[1] eq 0 select 0 else
+  max := Max([0] cat [s[1] eq 0 select 0 else
     Ceiling(Degree(s[1])) : s in branches]) + 1;
   branches := [* <s[1] + (Parent(s[1]).1)^max, s[2]> : s in branches *];
   info := [PuiseuxInfo(s[1]) : s in branches];
@@ -104,7 +109,7 @@ ProximityMatrixBranch := function(s, maxContact : ExtraPoint := false)
   end if;
   // Otherwise, the branch is represented by a Puiseux series.
   H := Prune([charExps[2] : charExps in PuiseuxInfo(s)]);
-  N := Max(&+([0] cat [&+h : h in H]), maxContact);
+  N := Max(&+[IntegerRing() | &+h : h in H], maxContact);
   if ExtraPoint then N := N + 1; end if;
   // Construct a proximity matrix with free points only.
   P := ScalarMatrix(N, 1);
@@ -115,8 +120,8 @@ ProximityMatrixBranch := function(s, maxContact : ExtraPoint := false)
     if i eq 1 and H[1][1] eq 0 then start := 3; else start := 2; end if;
     Hi := H[i]; Hi[#Hi] := Hi[#Hi] - 1;
     for j in [start..#Hi] do
-      l := (i eq 1 select 0 else &+[&+H[k] : k in [1..i-1]]) + &+Hi[1..j];
-      for k in [1..Hi[j]] do P[l+k, l-1] := -1; end for;
+      l := &+[IntegerRing() | &+H[k] : k in [1..i-1]] + &+Hi[1..j-1];
+      for k in [1..Hi[j]] do P[l + k + 1, l] := -1; end for;
     end for;
   end for;
   return P;
@@ -171,8 +176,9 @@ function ProximityMatrixImpl2(contactMat, branchesProx)
   end if;
   // ------------------- Compute the splits -----------------------------
   // Substract one to all the contact numbers except the diagonal ones.
-  N := Nrows(contactMat);
-  contactMat := contactMat - Matrix(N,[1: i in [1..N^2]]) + ScalarMatrix(N, 1);
+  N := Nrows(contactMat); ZZ := IntegerRing();
+  contactMat := contactMat - Matrix(N, [ZZ | 1: i in [1..N^2]])
+    + ScalarMatrix(N, 1);
   // Identify each current branch with an ID from 1 to #branches.
   C := contactMat; remainingBranches := [i : i in [1..N]]; S := [];
   // Splits will contain lists of branches ID, where two branches will
@@ -200,7 +206,7 @@ function ProximityMatrixImpl2(contactMat, branchesProx)
     newBranchProx[split]) : split in S *];
   // -------------- Merge the prox. matrix of each split ----------------
   // Create the matrix that will hold the proximity branch of this subdiagram.
-  numPoints := &+[Ncols(X[1]) : X in splitResult] + 1;
+  numPoints := &+[ZZ | Ncols(X[1]) : X in splitResult] + 1;
   P := ScalarMatrix(numPoints, 1); rowPoint := []; k := 1;
   // For each set of branches that splits in this node...
   for s in [1..#S] do
@@ -240,12 +246,10 @@ function ProximityMatrixImpl(branches: ExtraPoint := false,
   branchMult := [* branches[i][2] * MultiplicityVectorBranch(branches[i][1],
     Max(ElementToSequence(contactMat[i])):
     ExtraPoint := ExtraPoint) : i in [1..#branches] *];
-  // Compute the coefficients of each infinitely near point if requested.
-  if Coefficients then
-    branchCoeff := [ CoefficientsVectorBranch(branches[i][1],
-      Max(ElementToSequence(contactMat[i])):
-      ExtraPoint := ExtraPoint) : i in [1..#branches] ];
-  end if;
+  // Compute the coefficients of each infinitely near point.
+  branchCoeff := [ CoefficientsVectorBranch(branches[i][1],
+    Max(ElementToSequence(contactMat[i])):
+    ExtraPoint := ExtraPoint) : i in [1..#branches] ];
   // Get the proximity matrix of f and the position of each infinitely
   // near point inside the prox. matrix.
   P := ProximityMatrixImpl2(contactMat, branchProx);
@@ -253,8 +257,8 @@ function ProximityMatrixImpl(branches: ExtraPoint := false,
   // coherent with the prox. matrix P.
   E := [];
   for i in [1..#branches] do
-    Append(~E, Vector([0 : j in [1..Nrows(P[1])]]));
-    for j in [1..#P[2][i]] do E[i][P[2][i][j]] := branchMult[i][j]; end for;
+    Append(~E, ZeroMatrix(IntegerRing(), 1, Nrows(P[1])));
+    for j in [1..#P[2][i]] do E[i][1, P[2][i][j]] := branchMult[i][j]; end for;
   end for;
 
   if Coefficients then return <P[1], E, branchCoeff>;

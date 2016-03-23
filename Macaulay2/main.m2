@@ -9,6 +9,12 @@ load "ResolutionDim2/basePoints.m2"
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
+jacobiIdeal = method(TypicalValue => Ideal);
+jacobiIdeal (RingElement) := (f) -> (
+  x := first generators ring f;
+  y := last generators ring f;
+  return ideal(diff(x, f), diff(y, f));
+)
 
 QQ[x, y];
 

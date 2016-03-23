@@ -13,7 +13,7 @@ basePoints (Ideal) := (I) -> (
   branches := puiseuxExpansion(gen);
   (P, e) = proximityMatrix(apply(branches, (s, l) -> (s, 1)),
               ExtraPoint => true);
- -- Multiplicities of each generator.
+  -- Multiplicities of each generator.
   ee := new MutableList from apply(1..#gen, i -> vector toList(numcols P:0));
   for i from 0 to #branches - 1 do (
     (s, l) := branches#i;
@@ -23,7 +23,7 @@ basePoints (Ideal) := (I) -> (
   vv := P^-1*ee;
   -- Values for the points in the cluster.
   v := vector apply(entries matrix vv, min);
-  -- Multiplicities for the cluster base points.
+  -- Multiplicities for the cluster of base points.
   m := P*v;
   -- Remove points not in the cluster of base points.
   inCluster := positions(entries m, x -> x != 0);

@@ -1,6 +1,14 @@
 AttachSpec("/Users/guillem/ResolutionDim2/Magma/ResolutionDim2.m");
 Q<x, y> := PolynomialRing(RationalField(), 2);
 
+function JacobiIdeal1(f)
+  return ideal<Q | Derivative(f, 1), Derivative(f, 2)>;
+end function;
+
+function JacobiIdeal2(f)
+  return ideal<Q | f, Derivative(f, 1), Derivative(f, 2)>;
+end function;
+
 // Casas' book example.
 book := y^4 - x^2*y^2 - 2*x^4*y^2 + x^4*y + x^5*y + x^7;
 
@@ -48,7 +56,7 @@ v13 := y*(y^2 - x^3)*(y^2 - x^5);
 v14 := (y^3 - x^5)*((y - x^2)^3 - x^5); // Wrong!
 v15 := y*(y - x^2)*(y + x^2);
 v16 := y*(y - x^2)*(y + x^2)*(y^3 - x^5)*((y - x^2)^3 - x^5); // Wrong!
-//v17 := product toList apply(1..7, k -> y^4 - k*x^7);
+v17 := &*[y^4 - k*x^7 : k in [1..7]];
 v18 := y^7 - x^16;
 v19 := y^10 - x^23;
 v20 := (y - x)*(y^2 - x^3)*(x^2 - y^3);
