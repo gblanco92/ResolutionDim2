@@ -271,6 +271,13 @@ intrinsic ProximityMatrix(f::RngMPolElt: ExtraPoint := false,
 require Rank(Parent(f)) eq 2: "Argument must be a bivariate polynomial";
   // Get the general Puiseux expansion of f.
   branches := NewtonPuiseuxAlgorithm(f);
-  return ProximityMatrixImpl(branches: ExtraPoint := ExtraPoint,
+  P := ProximityMatrixImpl(branches: ExtraPoint := ExtraPoint,
                              Coefficients := Coefficients);
+  if not Coefficients then return <P[1], &+P[2]>;
+  else C := [* 0 : i in [1..Nrows(P[1])] *];
+    for i in [1..#P[2]] do
+      X := [ j : j in [1..Ncols(P[1])] | P[2][i][1][j] ne 0 ];
+      for j in [1..#P[3][i]] do C[X[j]] := P[3][i][j]; end for;
+    end for; return <P[1], &+P[2], C>;
+  end if;
 end intrinsic;

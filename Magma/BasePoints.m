@@ -1,4 +1,4 @@
-import "ProximityMatrix.m": ProximityMatrixImpl, PuiseuxInfo;
+import "ProximityMatrix.m": ProximityMatrixImpl;
 
 intrinsic BasePoints(I::RngMPol : Coefficients := false) -> []
 { Computes the weighted cluster of base points of a bivariate
@@ -65,13 +65,11 @@ require Rank(Parent(Representative(I))) eq 2:
   e := v*Transpose(P); inCluster := [i : i in [1..n] | e[1][i] ne 0];
   points2test := #inCluster - 1; i := 2;
   while points2test gt 0 do
-    p := inCluster[i];
     // Values for the generators at point p.
-    Vp := [vi[1][p] - v[1][p] : vi in Prune(V)];
+    p := inCluster[i]; Vp := [vi[1][p] - v[1][p] : vi in Prune(V)];
     // Points p is proximate to && Points proximate to p.
-    p_prox := [i : i in [1..n] | P[p][i] eq -1];
-    prox_p := [i : i in [1..n] | Transpose(P)[p][i] eq -1];
-    // ????????????????????????????????????
+    p_prox := [i : i in [1..#inCluster] | P[p][inCluster[i]] eq -1];
+    prox_p := [i : i in [1..#inCluster] | P[inCluster[i]][p] eq -1];
     Q := [ q : q in p_prox | &+Eltseq(Submatrix(P, prox_p, [q])) eq 0];
     for q in Q do
       // Values for the generators at point q.
