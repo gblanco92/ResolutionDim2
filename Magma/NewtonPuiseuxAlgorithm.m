@@ -3,11 +3,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 xFactor := function(f)
-  return Min([Exponents(t)[1] : t in Terms(f) | t ne 0]);
+  return Min([IntegerRing() | Exponents(t)[1] : t in Terms(f) | t ne 0]);
 end function;
 
 yFactor := function(f)
-  return Min([Exponents(t)[2] : t in Terms(f) | t ne 0]);
+  return Min([IntegerRing() | Exponents(t)[2] : t in Terms(f) | t ne 0]);
 end function;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -46,7 +46,7 @@ require &and[Rank(Parent(f)) eq 2 : f in L]:
   P<x, y> := PolynomialRing(AlgebraicClosure(CoefficientRing(Parent(f))), 2);
   // If Nf start on the right of the x-axis, we have an x-factor.
   yBranch := (xFactor(f) gt 0) select [*<Parent(f).1,
-    [<xFactor(L[i]), i> : i in [1..#L] | xFactor(L[i]) ne 0], P!0>*] else [* *];
+    [<xFactor(L[i]), i> : i in [1..#L] | xFactor(L[i]) ne 0], x>*] else [* *];
 
   sqFreePart := P!SquarefreePart(f); sqFreeFact := [];
   for i in [1..#L] do
@@ -66,7 +66,7 @@ NewtonPuiseuxAlgorithmLoop := function(f, L, ord, terms)
   Q<x> := PuiseuxSeriesRing(A: Precision := ord);
   // Step (i.a): Select only those factors containing the 0 branch.
   S := yFactor(f) gt 0 select [<Q!0, [<g[2], g[3]> : g in L
-    | yFactor(g[1]) ne 0], Parent(f)!0>] else [];
+    | yFactor(g[1]) ne 0], y0>] else [];
   // Step (i.b): For each side...
   for F in Faces(NewtonPolygon(f)) do
     n := GradientVector(F)[1]; m := GradientVector(F)[2];
@@ -117,13 +117,19 @@ intrinsic NewtonPuiseuxAlgorithmExpandReduced(s::RngSerPuisElt, f::RngMPolElt
                                               : Terms := 1) -> [ ]
 { Expands the Puiseux expansion s of a reduced bivariate polynomial }
 require Rank(Parent(f)) eq 2: "Argument f must be a bivariate polynomial";
-require Gcd([f, Derivative(f, 1), Derivative(f, 2)]) ne 1:
-  "Argumnet f must be squarefree";
 
-  n := ExponentDenominator(s); m := Degree(s); x := Parent(s).1;
+  n := ExponentDenominator(s); x := Parent(s).1;
+  m := s eq 0 select 0 else Degree(s);
   S := NewtonPuiseuxAlgorithmReducedLoop(f, n, Terms - 1);
   return
     [s + x^m*Composition(ChangePrecision(si[1], Infinity()), x^(1/n)): si in S];
+end intrinsic
+
+intrinsic NewtonPuiseuxAlgorithmExpandReduced(x::RngMPolElt, f::RngMPolElt
+                                              : Terms := 1) -> [ ]
+{ Expands the Puiseux expansion s of a reduced bivariate polynomial }
+require Rank(Parent(f)) eq 2: "Argument f must be a bivariate polynomial";
+  return [x];
 end intrinsic
 
 NewtonPuiseuxAlgorithmReducedLoop := function(f, ord, terms)

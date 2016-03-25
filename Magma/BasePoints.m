@@ -1,4 +1,4 @@
-import "ProximityMatrix.m": ProximityMatrixImpl;
+import "ProximityMatrix.m": ProximityMatrixImpl, CoefficientsVectorBranch;
 
 intrinsic BasePoints(I::RngMPol : Coefficients := false) -> []
 { Computes the weighted cluster of base points of a bivariate
@@ -15,33 +15,38 @@ require Rank(Parent(Representative(I))) eq 2:
   S := NewtonPuiseuxAlgorithm(G: Polynomial := true);
   P := ProximityMatrixImpl([* <s[1], 1> : s in S *]: ExtraPoint := true,
     Coefficients := true);
-  C := P[3]; EE := P[2]; n := Ncols(P[1]); P := P[1]; ZZ := IntegerRing();
-  // Compute the multiplicities of each generator in G.
-  E := [ZeroMatrix(ZZ, 1, n) : i in [1..#G]];
-  for i in [1..#S] do
-    for m in S[i][2] do E[m[2]] := E[m[2]] + m[1] * EE[i]; end for;
+  CC := P[3]; EE := P[2]; n := Ncols(P[1]); P := P[1]; ZZ := IntegerRing();
+  // Merge the coefficients of each branch.
+  C := [* 0: i in [1..n] *];
+  for i in [1..#EE] do
+    I := [j : j in [1..n] | EE[i][1][j] ne 0];
+    for j in [1..#I] do C[I[j]] := CC[i][j]; end for;
   end for;
+  // Compute the multiplicities of each generator in G.
+  E := [ZeroMatrix(ZZ, 1, n) : i in [1..#G]]; B := [[* *] : i in [1..#G]];
+  for i in [1..#S] do for m in S[i][2] do
+    E[m[2]] := E[m[2]] + m[1] * EE[i];
+    B[m[2]] cat:= [* <m[1] * EE[i], S[i][1], S[i][3], CC[i]> *];
+  end for; end for;
   // Values for each generator in G.
-  V := [e*Transpose(P^-1) : e in E];
+  V := [e*Transpose(P^-1) : e in E]; v := ZeroMatrix(ZZ, 1, n);
   // Values for the points in the cluster of base points.
-  v := ZeroMatrix(ZZ, 1, n);
   for i in [1..n] do v[1][i] := Min([vj[1][i] : vj in Prune(V)]); end for;
   // Multiplicities for the cluster of base points.
   e := v*Transpose(P);
   // Remove points not in the cluster of base points.
-  I := [i : i in [1..n] | e[1][i] ne 0 or E[#E][1][i] ne 0];
+  I := [i : i in [1..n] | e[1][i] ne 0 or E[#E][1][i] ne 0]; C:= C[I];
   P := Submatrix(P, I, I);  v := Submatrix(v, [1], I); n := Ncols(P);
   V := [Submatrix(v, [1], I) : v in V]; E := [Submatrix(e, [1], I) : e in E];
+  B := [[* <Submatrix(bi[1], [1], I), bi[2], bi[3], bi[4]>: bi in b *]: b in B];
   // ------------ Add NEW free points ------------------
   e := v*Transpose(P); inCluster := [i : i in [1..n] | e[1][i] ne 0];
   S := &+Submatrix(P, inCluster, inCluster)[1..#inCluster];
   lastFree := [i : i in [1..#inCluster] | S[i] eq 1];
   // For each last free point on a branch...
   for p in lastFree do
-    // Values for each generator in the point p.
-    Vp := [vi[1][p] : vi in Prune(V)];
-    // Index of the generator achieving the minimum.
-    g := Index(Vp, Min(Vp));
+    // Values for each gen. at p && index of the gen. achieving the minimum.
+    Vp := [vi[1][p] : vi in Prune(V)]; g := Index(Vp, Min(Vp));
     // If there is a unique gen. achieving the min. and
     // the excess is positive add new points.
     uniqueGen := #[vp : vp in Vp | vp eq v[1][p]] eq 1;
@@ -52,13 +57,26 @@ require Rank(Parent(Representative(I))) eq 2:
       k := Ceiling((wp - v[1][p])/E[g][1][p]);
       // Expand the proximity matrix.
       P := InsertBlock(ScalarMatrix(n + k, 1), P, 1, 1);
-      P[n + 1][p] := -1; n := Ncols(P);
+      P[n + 1][p] := -1; n := n + k;
       for i in [1..k - 1] do P[n - i + 1][n - i] := -1; end for;
       // Expand the vector of mult. of each generator & recompute.
       E := [InsertBlock(ZeroMatrix(ZZ, 1, n), e, 1, 1): e in E];
       for i in [1..k] do E[g][1][n - i + 1] := E[g][1][p]; end for;
       V := [e*Transpose(P^-1) : e in E]; v := ZeroMatrix(ZZ, 1, n);
       for i in [1..n] do v[1][i] := Min([vj[1][i] : vj in Prune(V)]); end for;
+      // Expand the vector of coefficients.
+      if Coefficients then // 1) Find the right branch in the current gen.
+        b := [i: i in [1..#B[g]] | B[g][i][1][1, p] ne 0][1]; Bg := B[g][b];
+        // Number of points of branch b appearing in BP(I)
+        m := #[e : e in Eltseq(Bg[1]) | e ne 0];
+        // If we do not have enough terms of Puiseux already computed...
+        if #Bg[4] lt m + k then
+          Bg[2] := NewtonPuiseuxAlgorithmExpandReduced(Bg[2], Bg[3]:
+            Terms := m + k - #Bg[4])[1];
+          Bg[4] := CoefficientsVectorBranch(Bg[2], m + k);
+        end if;
+        for i in [1..k] do C cat:= [* Bg[4][m + i] *]; end for;
+      end if;
     end if;
   end for;
   // ------------ Add NEW satellite points ------------------
@@ -83,10 +101,13 @@ require Rank(Parent(Representative(I))) eq 2:
         V := [e*Transpose(P^-1) : e in E]; v := ZeroMatrix(ZZ, 1, n);
         for i in [1..n] do v[1][i] := Min([vj[1][i] : vj in Prune(V)]); end for;
         e := v*Transpose(P); inCluster := [i : i in [1..n] | e[1][i] ne 0];
+        // Expand the vector of coefficients.
+        if Coefficients then C cat:= [* Infinity() *]; end if;
         points2test := points2test + 1;
       end if;
     end for;
     points2test := points2test - 1; i := i + 1;
   end while;
-  return <P, v + V[#V]>;
+  if Coefficients then return <P, v + V[#V], C>;
+  else return <P, v + V[#V]>; end if;
 end intrinsic;

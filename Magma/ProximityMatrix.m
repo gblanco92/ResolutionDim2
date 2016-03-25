@@ -145,26 +145,23 @@ MultiplicityVectorBranch := function(s, maxContact: ExtraPoint := false)
   return Vector(M);
 end function;
 
-CoefficientsVectorBranch := function(s, maxContact: ExtraPoint := false)
+CoefficientsVectorBranch := function(s, maxContact)
   // If the branch is the y-axis
-  if ExtraPoint then maxContact := maxContact + 1; end if;
   if Type(s) eq RngMPolElt then
     return [* CoefficientRing(Parent(s))!0 *] cat
            [* Infinity() : i in [1..maxContact] *];
   end if;
   // Otherwise, the branch is represented by a Puiseux series.
   I := PuiseuxInfo(s); C := [* *];
-  for charExp in Prune(I) do
-    C cat:= [* freePoint[2] : freePoint in charExp[1] *];
-    C cat:= [* Infinity() : i in [1..charExp[2][2]-1] *];
+  for i in [1..#Prune(I)] do
+    C cat:= [* freePoint[2] : freePoint in I[i][1] *];
+    Hi := I[i][2]; Hi[#Hi] := Hi[#Hi] - 1;
     // Inverted axis case.
-    if #charExp[2] eq 3 then
-      C cat:= [* Infinity() : i in [1..charExp[2][3]] *];
-    end if;
+    for sat in Hi[2..#Hi] do C cat:= [* Infinity() : j in [1..sat] *]; end for;
   end for;
-  if not ExtraPoint then Prune(~I[#I][1]); end if;
   C cat:= [* freePoint[2] : freePoint in I[#I][1] *];
-  if #C le maxContact then C cat:= [*0 : i in [1..maxContact - #C]*]; end if;
+  if #C lt maxContact then C cat:= [*0 : i in [1..(maxContact - #C)]*]; end if;
+  if s eq 0 then C cat:= [* 0 *]; end if;
   return C;
 end function;
 
@@ -248,8 +245,7 @@ function ProximityMatrixImpl(branches: ExtraPoint := false,
     ExtraPoint := ExtraPoint) : i in [1..#branches] *];
   // Compute the coefficients of each infinitely near point.
   branchCoeff := [ CoefficientsVectorBranch(branches[i][1],
-    Max(ElementToSequence(contactMat[i])):
-    ExtraPoint := ExtraPoint) : i in [1..#branches] ];
+    Max(ElementToSequence(contactMat[i])) + 1) : i in [1..#branches] ];
   // Get the proximity matrix of f and the position of each infinitely
   // near point inside the prox. matrix.
   P := ProximityMatrixImpl2(contactMat, branchProx);
@@ -276,8 +272,8 @@ require Rank(Parent(f)) eq 2: "Argument must be a bivariate polynomial";
   if not Coefficients then return <P[1], &+P[2]>;
   else C := [* 0 : i in [1..Nrows(P[1])] *];
     for i in [1..#P[2]] do
-      X := [ j : j in [1..Ncols(P[1])] | P[2][i][1][j] ne 0 ];
-      for j in [1..#P[3][i]] do C[X[j]] := P[3][i][j]; end for;
+      I := [ j : j in [1..Ncols(P[1])] | P[2][i][1][j] ne 0 ];
+      for j in [1..#I] do C[I[j]] := P[3][i][j]; end for;
     end for; return <P[1], &+P[2], C>;
   end if;
 end intrinsic;
