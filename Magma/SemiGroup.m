@@ -12,6 +12,7 @@ intrinsic CharExponents(s::RngSerPuisElt) -> []
     Append(~charExps, <mi, ni>);
   end while;
   return charExps;
+  //return [ce : ce in charExps | ce[1] ne ce[2]];
 end intrinsic;
 
 intrinsic CharExponents(f::RngMPolElt) -> []

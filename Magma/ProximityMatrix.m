@@ -23,8 +23,7 @@ Euclides := function(m, n)
     Append(~hs, m div n);
     Append(~ns, n);
     r := m mod n; m := n; n := r;
-  end while;
-  return <hs, ns>;
+  end while; return <hs, ns>;
 end function;
 
 PuiseuxInfo := function(s)
@@ -39,8 +38,7 @@ PuiseuxInfo := function(s)
     free := [ <e, Coefficient(s, e)> : e in [(mj + k*nj)/n : k in [0..h0]] ];
     sat  := Euclides(mi - mj, nj)[1];
     Append(~I, <free, sat>);
-  end for;
-  return I;
+  end for; return I;
 end function;
 
 ContactNumberExp := function(expInfoA, expInfoB)
@@ -77,8 +75,7 @@ ContactNumber := function(branchInfoA, branchInfoB)
     C := ContactNumberExp(branchInfoA[r], branchInfoB[r]);
     ContactNum := ContactNum + C[1];
     if not C[2] then break; end if;
-  end for;
-  return ContactNum;
+  end for; return ContactNum;
 end function;
 
 ContactMatrix := function(branches)
@@ -94,8 +91,7 @@ ContactMatrix := function(branches)
       contactNum := ContactNumber(info[i], info[j]);
       contact[i][j] := contactNum; contact[j][i] := contactNum;
     end for;
-  end for;
-  return contact;
+  end for; return contact;
 end function;
 
 ProximityMatrixBranch := function(s, maxContact : ExtraPoint := false)
@@ -123,8 +119,7 @@ ProximityMatrixBranch := function(s, maxContact : ExtraPoint := false)
       l := &+[IntegerRing() | &+H[k] : k in [1..i-1]] + &+Hi[1..j-1];
       for k in [1..Hi[j]] do P[l + k + 1, l] := -1; end for;
     end for;
-  end for;
-  return P;
+  end for; return P;
 end function;
 
 MultiplicityVectorBranch := function(s, maxContact: ExtraPoint := false)
@@ -156,11 +151,11 @@ CoefficientsVectorBranch := function(s, maxContact)
   for i in [1..#Prune(I)] do
     C cat:= [* freePoint[2] : freePoint in I[i][1] *];
     Hi := I[i][2]; Hi[#Hi] := Hi[#Hi] - 1;
-    // Inverted axis case.
-    for sat in Hi[2..#Hi] do C cat:= [* Infinity() : j in [1..sat] *]; end for;
+    C cat:= [* Infinity() : j in [1..&+Hi[2..#Hi]] *];
   end for;
   C cat:= [* freePoint[2] : freePoint in I[#I][1] *];
   if #C lt maxContact then C cat:= [*0 : i in [1..(maxContact - #C)]*]; end if;
+  // The 0 Puiseux series must be treated separately.
   if s eq 0 then C cat:= [* 0 *]; end if;
   return C;
 end function;

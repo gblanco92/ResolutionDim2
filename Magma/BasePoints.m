@@ -4,13 +4,11 @@ intrinsic BasePoints(I::RngMPol : Coefficients := false) -> []
 { Computes the weighted cluster of base points of a bivariate
   polynomial ideal I }
 require Type(Representative(I)) eq RngMPolElt:
-  "Ideal must be a polynomial ideal";
+  "Argument must be a polynomial ideal";
 require Rank(Parent(Representative(I))) eq 2:
-  "Ideal must be a bivariate polynomial ideal";
+  "Argument must be a bivariate polynomial ideal";
   // Generators in G & fixed part F.
-  G := Generators(I); F := Gcd(G);
-  //G := [g div F : g in G] cat (Evaluate(F, <0,0>) eq 0 select [F] else []);
-  G := [g div F : g in G] cat [F];
+  G := Generators(I); F := Gcd(G); G := [g div F : g in G] cat [F];
   // Compute the Puiseux expansion & the prox. matrix for the product.
   S := NewtonPuiseuxAlgorithm(G: Polynomial := true);
   P := ProximityMatrixImpl([* <s[1], 1> : s in S *]: ExtraPoint := true,
@@ -28,6 +26,10 @@ require Rank(Parent(Representative(I))) eq 2:
     E[m[2]] := E[m[2]] + m[1] * EE[i];
     B[m[2]] cat:= [* <m[1] * EE[i], S[i][1], S[i][3], CC[i]> *];
   end for; end for;
+  // Remove the extra point in the fixed part.
+  for i in [i : i in [1..#S] | &or[b[2] eq #G : b in S[i][2]]] do
+    k := Reverse([j: j in [1..n] | EE[i][1][j] ne 0])[1]; E[#E][1][k] := 0;
+  end for;
   // Values for each generator in G.
   V := [e*Transpose(P^-1) : e in E]; v := ZeroMatrix(ZZ, 1, n);
   // Values for the points in the cluster of base points.
