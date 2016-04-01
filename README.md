@@ -1,6 +1,6 @@
 # ResolutionDim2
 
-Resolution singularities in dimension 2. (work in progress)
+Resolution of singularities in dimension 2. (work in progress)
 
 Features:
 
