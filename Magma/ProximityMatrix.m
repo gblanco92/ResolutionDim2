@@ -1,4 +1,4 @@
-import "SemiGroup.m": TailExponents;
+import "SemiGroup.m": Euclides, TailExponentSeries;
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -17,26 +17,15 @@ end intrinsic;
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-Euclides := function(m, n)
-  hs := []; ns := [];
-  while n ne 0 do
-    Append(~hs, m div n);
-    Append(~ns, n);
-    r := m mod n; m := n; n := r;
-  end while; return <hs, ns>;
-end function;
-
 PuiseuxInfo := function(s)
   if Type(s) eq RngMPolElt then return [<[<0,0>], [0, Infinity()]>]; end if;
-  I := []; E := CharExponents(s); T := TailExponents(s);
-  E cat:= [T[#T]]; n := E[1][2];
+  E := CharExponents(s); T := TailExponentSeries(s);
+  I := []; E cat:= [T]; n := E[1][2];
   // For each characteristic exponent...
   for i in [2..#E] do
-    mj := E[i-1][1]; nj := E[i-1][2];
-    mi := E[i][1]; ni := E[i][2];
-    h0 := (mi - mj) div nj;
+    mj := E[i-1][1]; nj := E[i-1][2]; mi := E[i][1]; ni := E[i][2];
+    h0 := (mi - mj) div nj; sat := Euclides(mi - mj, nj)[1];
     free := [ <e, Coefficient(s, e)> : e in [(mj + k*nj)/n : k in [0..h0]] ];
-    sat  := Euclides(mi - mj, nj)[1];
     Append(~I, <free, sat>);
   end for; return I;
 end function;

@@ -3,5 +3,5 @@
   SemiGroup.m
   ProximityMatrix.m
   BasePoints.m
-  WeierstrassEquation.m
+  IntegralClosure.m
 }
