@@ -102,9 +102,9 @@ ProximityMatrixBranch := function(s, maxContact : ExtraPoint := false)
   // Fill in satellite points proximities.
   for i in [1..#H] do
     // Inverted axis case.
-    if i eq 1 and H[1][1] eq 0 then start := 3; else start := 2; end if;
+    if i eq 1 and H[1][1] eq 0 then j0 := 3; else j0 := 2; end if;
     Hi := H[i]; Hi[#Hi] := Hi[#Hi] - 1;
-    for j in [start..#Hi] do
+    for j in [j0..#Hi] do
       l := &+[IntegerRing() | &+H[k] : k in [1..i-1]] + &+Hi[1..j-1];
       for k in [1..Hi[j]] do P[l + k + 1, l] := -1; end for;
     end for;
@@ -116,8 +116,7 @@ MultiplicityVectorBranch := function(s, maxContact: ExtraPoint := false)
   if Type(s) eq RngMPolElt then
     if ExtraPoint then maxContact := maxContact + 1; end if;
     return Vector([1 : i in [1..maxContact]]);
-  end if;
-  // Otherwise, the branch is represented by a Puiseux series.
+  end if; // Otherwise, the branch is represented by a Puiseux series.
   M := []; E := CharExponents(s);
   for i in [2..#E] do
     mj := E[i-1][1]; nj := E[i-1][2]; mi := E[i][1]; ni := E[i][2];
@@ -134,8 +133,7 @@ CoefficientsVectorBranch := function(s, maxContact)
   if Type(s) eq RngMPolElt then
     return [* CoefficientRing(Parent(s))!0 *] cat
            [* Infinity() : i in [1..maxContact] *];
-  end if;
-  // Otherwise, the branch is represented by a Puiseux series.
+  end if; // Otherwise, the branch is represented by a Puiseux series.
   I := PuiseuxInfo(s); C := [* *];
   for i in [1..#Prune(I)] do
     C cat:= [* freePoint[2] : freePoint in I[i][1] *];
