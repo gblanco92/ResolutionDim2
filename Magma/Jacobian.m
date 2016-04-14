@@ -10,10 +10,12 @@ FiltrationImpl := function(s, f, M)
   KK := &+[ei*ei : ei in Eltseq(e)]; N := Ncols(e) + M - KK;
   // Get the proximity matrix with all the necessary points.
   s := NewtonPuiseuxAlgorithmExpandReduced(s, f: Terms := M - KK - 1)[1];
-  P := ProximityMatrixBranch(s, N); c := CoefficientsVectorBranch(s, N);
+  P := ProximityMatrixBranch(s, N);
+  e := MultiplicityVectorBranch(s, N);
+  c := CoefficientsVectorBranch(s, N);
   // The first ideals of the filtrations are the maximal ideal.
   Q := PolynomialRing(CoefficientRing(Parent(s)), 2);
-  R<x, y> := PolynomialRing(RationalField(), 2); n := e[1][1];
+  R<x, y> := PolynomialRing(RationalField(), 2); n := e[1];
   H := [ideal<R | x, y> : i in [1..n]]; I := [1]; m_i := n;
   e_i := Matrix(1, 1, [1]); ZZ := IntegerRing();
   // Construct the i-th cluster.
@@ -27,7 +29,7 @@ FiltrationImpl := function(s, f, M)
     I := [i : i in [1..Ncols(P_i)] | e_i[1][i] ne 0]; P_i := Submatrix(P_i, I, I);
     e_i := Submatrix(e_i, [1], I); v_i := Submatrix(v_i, [1], I); c_i := c[I];
     // Get the intersection [K, K_i] & and the complete ideal H_i.
-    KK_i := &+[e_i[1][j]*e[1][j] : j in [1..#I]];
+    KK_i := &+[e_i[1][j]*e[j] : j in [1..#I]];
     HH_i := [ IntegralClosureImpl(K_j[1], K_j[2], K_j[3], Q) :
       K_j in ClusterFactorization(P_i, v_i, c_i) ];
     H_i := CleanIdeal([j gt 1 select Self(j - 1)*HH_i[j]
@@ -46,7 +48,7 @@ require n ge 0: "Second argument must be a positive integer";
 
   S := NewtonPuiseuxAlgorithm(f: Polynomial := true);
   if #S gt 1 or S[1][2] gt 1 then error "the curve must be irreducible"; end if;
-  s := S[1][1]; f := S[1][3]; e := MultiplicityVectorBranch(s, 0);
+  s := S[1][1]; f := S[1][3]; e := ProximityMatrixImpl([<s, 1>])[2][1];
   KK := &+[ei*ei : ei in Eltseq(e)]; // Curve auto-intersection.
 
   return FiltrationImpl(s, f, n eq 0 select KK else n);

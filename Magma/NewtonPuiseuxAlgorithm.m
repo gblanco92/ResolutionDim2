@@ -29,11 +29,13 @@ intrinsic NewtonPuiseuxAlgorithm(f::RngMPolElt : Terms := -1,
 { Computes the Puiseux expansion of any bivariate polynomial }
 require Rank(Parent(f)) eq 2: "Argument must be a bivariate polynomial";
   // If Nf start on the right of the x-axis, we have an x-factor.
-  yBranch := (xFactor(f) gt 0) select [*<Parent(f).1, xFactor(f)>*] else [* *];
+  yBranch := (xFactor(f) gt 0) select [*<Parent(f).1,
+    [<xFactor(f), 1>], Parent(f).1>*] else [* *];
 
   P<x, y> := PolynomialRing(AlgebraicClosure(CoefficientRing(Parent(f))), 2);
   S := yBranch cat SequenceToList(NewtonPuiseuxAlgorithmLoop(P!SquarefreePart(f),
     [<P!g[1], g[2], 1> : g in SquarefreeFactorization(f)], 1, Terms - 1));
+print S;
   if not Polynomial then return [* <s[1], s[2][1][1]> : s in S *];
   else return [* <s[1], s[2][1][1], s[3]> : s in S *]; end if;
 end intrinsic;
