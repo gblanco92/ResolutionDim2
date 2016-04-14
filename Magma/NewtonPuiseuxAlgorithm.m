@@ -24,16 +24,18 @@ end function;
 
 forward NewtonPuiseuxAlgorithmLoop;
 
-intrinsic NewtonPuiseuxAlgorithm(f::RngMPolElt : Terms := -1) -> [ ]
+intrinsic NewtonPuiseuxAlgorithm(f::RngMPolElt : Terms := -1,
+                                                 Polynomial := false) -> [ ]
 { Computes the Puiseux expansion of any bivariate polynomial }
 require Rank(Parent(f)) eq 2: "Argument must be a bivariate polynomial";
   // If Nf start on the right of the x-axis, we have an x-factor.
   yBranch := (xFactor(f) gt 0) select [*<Parent(f).1, xFactor(f)>*] else [* *];
 
   P<x, y> := PolynomialRing(AlgebraicClosure(CoefficientRing(Parent(f))), 2);
-  S := NewtonPuiseuxAlgorithmLoop(P!SquarefreePart(f),
-    [<P!g[1], g[2], 1> : g in SquarefreeFactorization(f)], 1, Terms - 1);
-  return yBranch cat SequenceToList([<s[1], s[2][1][1]> : s in S]);
+  S := yBranch cat SequenceToList(NewtonPuiseuxAlgorithmLoop(P!SquarefreePart(f),
+    [<P!g[1], g[2], 1> : g in SquarefreeFactorization(f)], 1, Terms - 1));
+  if not Polynomial then return [* <s[1], s[2][1][1]> : s in S *];
+  else return [* <s[1], s[2][1][1], s[3]> : s in S *]; end if;
 end intrinsic;
 
 intrinsic NewtonPuiseuxAlgorithm(L::[RngMPolElt] : Terms := -1,
@@ -62,15 +64,14 @@ require &and[Rank(Parent(f)) eq 2 : f in L]:
 end intrinsic;
 
 NewtonPuiseuxAlgorithmLoop := function(f, L, ord, terms)
-  A := CoefficientRing(Parent(f)); x0 := Parent(f).1; y0 := Parent(f).2;
-  Q<x> := PuiseuxSeriesRing(A: Precision := ord);
+  Q<x> := PuiseuxSeriesRing(CoefficientRing(Parent(f)));
+  x0 := Parent(f).1; y0 := Parent(f).2;
   // Step (i.a): Select only those factors containing the 0 branch.
   S := yFactor(f) gt 0 select [<Q!0, [<g[2], g[3]> : g in L
     | yFactor(g[1]) ne 0], y0>] else [];
   // Step (i.b): For each side...
   for F in Faces(NewtonPolygon(f)) do
     n := GradientVector(F)[1]; m := GradientVector(F)[2];
-    P<x> := PuiseuxSeriesRing(A: Precision := ord*n);
     // Apply the change of variables (1).
     C := Reverse(Coefficients(n eq 1 select f else Evaluate(f, 1, x0^n), 2));
     CL := [<Reverse(Coefficients(n eq 1 select g[1] else
@@ -88,10 +89,10 @@ NewtonPuiseuxAlgorithmLoop := function(f, L, ord, terms)
       // If the mult. of a is greater than 1 continue.
       R := (a[2] ne 1 and terms lt -1) or terms gt 0 select
         NewtonPuiseuxAlgorithmLoop(ff, LL, ord*n, terms - 1) else
-          [<P!0, [<g[2], g[3]> : g in LL], ff>];
+          [<Q!0, [<g[2], g[3]> : g in LL], ff>];
       // Undo the change of variables.
-      S cat:= [<x^(m/n)*(a[1] + Composition(s[1], x^(1/n))), s[2], s[3]> :
-        s in R];
+      S cat:= [<x^(m/n)*(a[1] + ChangePrecision(Composition(s[1], x^(1/n)),
+        Infinity())), s[2], s[3]> : s in R];
     end for;
   end for;
 
@@ -120,7 +121,9 @@ require Rank(Parent(f)) eq 2: "Argument f must be a bivariate polynomial";
 
   n := ExponentDenominator(s); x := Parent(s).1;
   m := s eq 0 select 0 else Degree(s);
-  S := NewtonPuiseuxAlgorithmReducedLoop(f, n, Terms - 1);
+  S := Terms gt 0 select NewtonPuiseuxAlgorithmReducedLoop(f, n, Terms - 1)
+       else [<PuiseuxSeriesRing(CoefficientRing(Parent(f)))!0, f>];
+  P<x> := PuiseuxSeriesRing(CoefficientRing(Parent(f)));
   return
     [s + x^m*Composition(ChangePrecision(si[1], Infinity()), x^(1/n)): si in S];
 end intrinsic
@@ -133,14 +136,13 @@ require Rank(Parent(f)) eq 2: "Argument f must be a bivariate polynomial";
 end intrinsic
 
 NewtonPuiseuxAlgorithmReducedLoop := function(f, ord, terms)
-  A := CoefficientRing(Parent(f)); x0 := Parent(f).1; y0 := Parent(f).2;
-  Q<x> := PuiseuxSeriesRing(A: Precision := ord);
+  Q<x> := PuiseuxSeriesRing(CoefficientRing(Parent(f)));
+  x0 := Parent(f).1; y0 := Parent(f).2;
   // Step (i.a): Select only those factors containing the 0 branch.
   S := yFactor(f) gt 0 select [<Q!0, Parent(f)!0>] else [];
   // Step (i.b): For each side...
   for F in Faces(NewtonPolygon(f)) do
     n := GradientVector(F)[1]; m := GradientVector(F)[2];
-    P<x> := PuiseuxSeriesRing(A: Precision := ord*n);
     // Apply the change of variables (1).
     C := Reverse(Coefficients(n eq 1 select f else Evaluate(f, 1, x0^n), 2));
     // For each root...
@@ -149,11 +151,10 @@ NewtonPuiseuxAlgorithmReducedLoop := function(f, ord, terms)
       R := (a[2] ne 1 and terms lt -1) or terms gt 0 select
         NewtonPuiseuxAlgorithmReducedLoop([i gt 1 select
           C[i] + Self(i-1)*x0^m*(a[1] + y0) else C[1] : i in [1..#C]][#C],
-        ord*n, terms - 1) else [<P!0, f>];
+        ord*n, terms - 1) else [<Q!0, f>];
       // Undo the change of variables.
-      S cat:= [<x^(m/n)*(a[1] + Composition(s[1], x^(1/n))), s[2]> : s in R];
+      S cat:= [<x^(m/n)*(a[1] + ChangePrecision(Composition(s[1], x^(1/n)),
+        Infinity())), s[2]> : s in R];
     end for;
-  end for;
-
-  return S;
+  end for; return S;
 end function;

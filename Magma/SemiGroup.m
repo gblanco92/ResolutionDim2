@@ -47,7 +47,7 @@ TailExponentSeries := function(s)
   E := [ m + i - 1 : i in [1 .. #C] | C[i] ne 0 ];
   charExps := CharExponents(s); g := #charExps;
   if s eq 0 then return <0, 1>; end if;
-  return [<e, 1> : e in E | e ge charExps[g][1]][1];
+  return [<e, 1> : e in Reverse(E) | e ge charExps[g][1]][1];
 end function;
 
 TailExponentMatrix := function(P, v)

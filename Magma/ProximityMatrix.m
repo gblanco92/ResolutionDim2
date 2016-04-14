@@ -91,8 +91,7 @@ ProximityMatrixBranch := function(s, maxContact : ExtraPoint := false)
     P := ScalarMatrix(maxContact, 1);
     for i in [2..maxContact] do P[i][i-1] := -1; end for;
     return P;
-  end if;
-  // Otherwise, the branch is represented by a Puiseux series.
+  end if; // Otherwise, the branch is represented by a Puiseux series.
   H := Prune([charExps[2] : charExps in PuiseuxInfo(s)]);
   N := Max(&+[IntegerRing() | &+h : h in H], maxContact);
   if ExtraPoint then N := N + 1; end if;
